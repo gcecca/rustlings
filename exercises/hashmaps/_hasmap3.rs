@@ -1,19 +1,3 @@
-// hashmaps3.rs
-
-// A list of scores (one per line) of a soccer match is given. Each line
-// is of the form :
-// <team_1_name>,<team_2_name>,<team_1_goals>,<team_2_goals>
-// Example: England,France,4,2 (England scored 4 goals, France 2).
-
-// You have to build a scores table containing the name of the team, goals
-// the team scored, and goals the team conceded. One approach to build
-// the scores table is to use a Hashmap. The solution is partially
-// written to use a Hashmap, complete it to pass the test.
-
-// Make me pass the tests!
-
-// Execute `rustlings hint hashmaps3` or use the `hint` watch subcommand for a hint.
-
 use std::collections::HashMap;
 
 // A structure to store team name and its goal details.
@@ -25,21 +9,34 @@ struct Team {
 }
 
 fn update_or_insert(scores: &mut HashMap<String, Team>, team_name: &str,
-		    scored: &mut u8, conceded: &mut u8){
-    
-    if let Some(team) = scores.get(team_name){
-	*scored += team.goals_scored;
-	*conceded += team.goals_conceded;
-    }
+		    team: &Team){
 
-    let team_status = Team {
-	name: team_name.to_string(),
-	goals_scored: *scored,
-	goals_conceded: *conceded,
-    };
-    
-    scores.insert(team_name.to_string(), team_status);
+    if scores.contains_key(team_name){
+	let t = scores.get(team_name);
+	let team_status: &Team = match t{
+	    Some(t) => t,
+	    None => team
+	};
+
+	let team_status = Team {
+	    name: team_name.to_string(),
+	    goals_scored: team.goals_scored + team_status.goals_scored,
+	    goals_conceded: team.goals_conceded + team_status.goals_conceded,
+	};
+
+	scores.insert(team_name.to_string(), team_status);
+    }
+    else {
+	let team_status = Team {
+	    name: team.name.to_string(),
+	    goals_scored: team.goals_scored,
+	    goals_conceded: team.goals_conceded
+
+	};
+	scores.insert(team_name.to_string(), team_status);
+    }
 }
+
 
 fn build_scores_table(results: String) -> HashMap<String, Team> {
     // The name of the team is the key and its associated struct is the value.
@@ -48,17 +45,24 @@ fn build_scores_table(results: String) -> HashMap<String, Team> {
     for r in results.lines() {
         let v: Vec<&str> = r.split(',').collect();
         let team_1_name = v[0].to_string();
-        let mut team_1_score: u8 = v[2].parse().unwrap();
+        let team_1_score: u8 = v[2].parse().unwrap();
         let team_2_name = v[1].to_string();
-        let mut team_2_score: u8 = v[3].parse().unwrap();
+        let team_2_score: u8 = v[3].parse().unwrap();
         // TODO: Populate the scores table with details extracted from the
         // current line. Keep in mind that goals scored by team_1
         // will be the number of goals conceded from team_2, and similarly
         // goals scored by team_2 will be the number of goals conceded by
         // team_1.
+	let mut team_1 = Team {name: String::from(&team_1_name),
+			       goals_scored: team_1_score,
+			       goals_conceded: team_2_score};
+	
+	let mut team_2 = Team {name: String::from(&team_2_name),
+			       goals_scored: team_2_score,
+			       goals_conceded: team_1_score};
 
-	update_or_insert(&mut scores, &team_1_name, &mut team_1_score, &mut team_2_score);
-	update_or_insert(&mut scores, &team_2_name, &mut team_2_score, &mut team_1_score);
+	update_or_insert(&mut scores, &team_1_name, &team_1);
+	update_or_insert(&mut scores, &team_2_name, &team_2);
     }
     scores
 }

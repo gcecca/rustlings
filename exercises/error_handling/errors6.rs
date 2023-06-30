@@ -1,15 +1,14 @@
 // errors6.rs
-//
+
 // Using catch-all error types like `Box<dyn error::Error>` isn't recommended
 // for library code, where callers might want to make decisions based on the
-// error content, instead of printing it out or propagating it further. Here, we
-// define a custom error type to make it possible for callers to decide what to
-// do next when our function returns an error.
-//
-// Execute `rustlings hint errors6` or use the `hint` watch subcommand for a
-// hint.
+// error content, instead of printing it out or propagating it further. Here,
+// we define a custom error type to make it possible for callers to decide
+// what to do next when our function returns an error.
 
-// I AM NOT DONE
+// Execute `rustlings hint errors6` or use the `hint` watch subcommand for a hint.
+
+
 
 use std::num::ParseIntError;
 
@@ -22,17 +21,32 @@ enum ParsePosNonzeroError {
 
 impl ParsePosNonzeroError {
     fn from_creation(err: CreationError) -> ParsePosNonzeroError {
+
         ParsePosNonzeroError::Creation(err)
     }
     // TODO: add another error conversion function here.
     // fn from_parseint...
+    fn from_parseint(err: ParseIntError) -> ParsePosNonzeroError{
+
+	ParsePosNonzeroError::ParseInt(err)
+    }
 }
 
 fn parse_pos_nonzero(s: &str) -> Result<PositiveNonzeroInteger, ParsePosNonzeroError> {
     // TODO: change this to return an appropriate error instead of panicking
     // when `parse()` returns an error.
-    let x: i64 = s.parse().unwrap();
-    PositiveNonzeroInteger::new(x).map_err(ParsePosNonzeroError::from_creation)
+    match s.parse() {
+	Err(p) => Err(ParsePosNonzeroError::from_parseint(p)),
+	Ok(v) => {
+	    match PositiveNonzeroInteger::new(v) {
+		Err(CreationError::Negative) =>
+		    Err(ParsePosNonzeroError::from_creation(CreationError::Negative)),
+		Err(CreationError::Zero) =>
+		    Err(ParsePosNonzeroError::from_creation(CreationError::Zero)),
+		Ok(v) => Ok(v)
+	    }
+	}
+    }
 }
 
 // Don't change anything below this line.
